@@ -1,5 +1,5 @@
 export type Channel = 'email' | 'casual' | 'professional' | 'sales' | 'social';
-export type Mode = 'rewrite' | 'edit' | 'rate';
+export type Mode = 'rewrite' | 'edit' | 'rate' | 'compose';
 export type Register = 'casual' | 'professional' | 'warm' | 'direct' | 'bad-news' | 'apology' | 'disagreement';
 
 export type Prompt = {
@@ -12,6 +12,8 @@ export type Prompt = {
   setup?: string;
   text: string;
   ask: string;
+  contextFacts?: string[];
+  inventDetails?: string[];
 };
 
 export type Sample = {
@@ -23,6 +25,8 @@ export type Sample = {
   register: Register;
   promptText: string;
   setup?: string;
+  contextFacts?: string[];
+  inventDetails?: string[];
   rewrite: string;
   createdAt: string;
 };
