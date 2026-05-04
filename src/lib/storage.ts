@@ -6,6 +6,8 @@ export const emptyState: AppState = {
   samples: [],
   negatives: [],
   skippedPromptIds: [],
+  calibrationAnswers: [],
+  responseRatings: [],
 };
 
 export function loadState(): AppState {
@@ -19,6 +21,8 @@ export function loadState(): AppState {
       samples: Array.isArray(parsed.samples) ? parsed.samples : [],
       negatives: Array.isArray(parsed.negatives) ? parsed.negatives : [],
       skippedPromptIds: Array.isArray(parsed.skippedPromptIds) ? parsed.skippedPromptIds : [],
+      calibrationAnswers: Array.isArray(parsed.calibrationAnswers) ? parsed.calibrationAnswers : [],
+      responseRatings: Array.isArray(parsed.responseRatings) ? parsed.responseRatings : [],
     };
   } catch {
     return emptyState;

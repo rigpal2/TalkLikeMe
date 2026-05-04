@@ -39,8 +39,55 @@ export type NegativeExample = {
   createdAt: string;
 };
 
+export type CalibrationOption = {
+  id: string;
+  label: string;
+  description: string;
+  trait: string;
+};
+
+export type CalibrationQuestion = {
+  id: string;
+  category: string;
+  question: string;
+  options: CalibrationOption[];
+};
+
+export type CalibrationAnswer = {
+  questionId: string;
+  optionId: string;
+  createdAt: string;
+};
+
+export type RatingResponse = {
+  id: string;
+  text: string;
+  traits: string[];
+};
+
+export type RatingScenario = {
+  id: string;
+  category: string;
+  prompt: string;
+  context: string;
+  responses: RatingResponse[];
+};
+
+export type ResponseRating = {
+  id: string;
+  scenarioId: string;
+  responseId: string;
+  rating: 1 | 2 | 3 | 4 | 5;
+  prompt: string;
+  responseText: string;
+  traits: string[];
+  createdAt: string;
+};
+
 export type AppState = {
   samples: Sample[];
   negatives: NegativeExample[];
   skippedPromptIds: string[];
+  calibrationAnswers: CalibrationAnswer[];
+  responseRatings: ResponseRating[];
 };

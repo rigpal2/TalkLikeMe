@@ -1,4 +1,5 @@
-import type { AppState, Sample } from '../types';
+import type { AppState, ResponseRating, Sample } from '../types';
+import { buildCalibrationProfile } from './calibrationProfile';
 import { categoryCounts, channelCounts, recommendedCategory, strengthLabel } from './progress';
 
 function escapeMd(text: string) {
@@ -21,28 +22,41 @@ function sampleBlock(sample: Sample, index: number) {
   return `### Example ${index + 1}: ${sample.category} / ${sample.channel}\n\n${scenarioParts ? `${scenarioParts}\n\n` : ''}**Prompt:**\n\n> ${escapeMd(sample.promptText).replace(/\n/g, '\n> ')}\n\n**My response:**\n\n> ${escapeMd(sample.rewrite).replace(/\n/g, '\n> ')}\n`;
 }
 
+function ratingBlock(rating: ResponseRating) {
+  return `- ${rating.rating}/5 — ${rating.responseText}\n  - Signals: ${rating.traits.join(', ')}`;
+}
+
 export function buildVoiceMarkdown(state: AppState) {
   const sampleCount = state.samples.length;
   const categories = categoryCounts(state);
   const channels = channelCounts(state);
   const topExamples = state.samples.slice(-12).reverse();
   const avoided = state.negatives.map((negative) => `- ${negative.phrase}`).join('\n') || '- Add phrases here as you reject generic wording.';
+  const profile = buildCalibrationProfile(state);
+  const likedRatings = profile.bestRatedResponses.length ? profile.bestRatedResponses.map(ratingBlock).join('\n') : '- Rate example responses 4–5 to add positive voice signals.';
+  const dislikedRatings = profile.worstRatedResponses.length ? profile.worstRatedResponses.map(ratingBlock).join('\n') : '- Rate example responses 1–2 to add avoid signals.';
 
-  return `# TalkLikeMe Voice Instructions\n\nThis file is designed to help an AI assistant write in my voice. Treat it as an instruction file first, and a style guide second. Preserve my meaning, but rewrite with my phrasing, pacing, and level of directness.\n\n## Quick Instructions for AI\n\n- Use the examples below as the source of truth.\n- Prefer wording that sounds like the examples, not generic polished AI copy.\n- Do not use phrases listed under \"Phrases I Avoid.\"\n- Match the channel when available: email, casual, professional, sales, or social.\n- If there is not enough evidence for a channel, stay simple, direct, and human.\n- Do not over-apologize, over-explain, or add fake enthusiasm unless the examples show that style.\n- When a real message needs specificity, add practical details: names, dates, times, tradeoffs, benefits, next steps, or concrete examples. Do not stay vague just because the source prompt is vague.\n\n## Current Profile Strength\n\n- Samples collected: ${sampleCount}\n- Overall strength: ${strengthLabel(sampleCount)}\n- Next recommended category: ${recommendedCategory(state) ?? 'none'}\n\n## Channel Coverage\n\n${channels.map((item) => `- ${item.channel}: ${item.count} sample${item.count === 1 ? '' : 's'} (${strengthLabel(item.count)})`).join('\n')}\n\n## Category Coverage\n\n${categories.map((item) => `- ${item.category}: ${item.count} sample${item.count === 1 ? '' : 's'}`).join('\n')}\n\n## Phrases I Avoid\n\n${avoided}\n\n## Examples\n\n${topExamples.length ? topExamples.map(sampleBlock).join('\n') : 'No examples collected yet.'}\n\n## How to Use This File\n\nWhen generating a draft for me, first infer the relevant channel and situation. Then use the examples above to match my natural wording. If a draft sounds like a press release, generic email template, or polished AI response, rewrite it to be more like the examples. If the situation is underspecified, make reasonable assumptions and include the specific details a real message would need instead of producing vague filler.\n`;
+  return `# TalkLikeMe Voice Instructions\n\nThis file is designed to help an AI assistant write in my voice. Treat it as an instruction file first, and a style guide second. Preserve my meaning, but rewrite with my phrasing, pacing, and level of directness.\n\n## Quick Instructions for AI\n\n- Use the calibration profile, rated examples, and written examples below as the source of truth.\n- Prefer wording that sounds like the examples I rated highly or wrote myself, not generic polished AI copy.\n- Do not use phrases listed under \"Phrases I Avoid.\"\n- Match the channel when available: email, casual, professional, sales, or social.\n- If there is not enough evidence for a channel, stay simple, direct, and human.\n- Do not over-apologize, over-explain, or add fake enthusiasm unless the examples show that style.\n- When a real message needs specificity, add practical details: names, dates, times, tradeoffs, benefits, next steps, or concrete examples. Do not stay vague just because the source prompt is vague.\n\n## Fast Calibration Profile\n\n- Quiz answers: ${profile.answeredCount}/${profile.questionCount}\n- Rated responses: ${profile.ratedCount}\n- Baseline summary: ${profile.summary}\n\n### Explicit Style Choices\n\n${profile.selectedTraits.length ? profile.selectedTraits.map((trait) => `- ${trait}`).join('\n') : '- No multiple-choice style answers yet.'}\n\n### Response Patterns I Like\n\n${profile.likedTraits.length ? profile.likedTraits.map((trait) => `- ${trait}`).join('\n') : '- No strong liked patterns yet.'}\n\n### Response Patterns I Dislike\n\n${profile.dislikedTraits.length ? profile.dislikedTraits.map((trait) => `- ${trait}`).join('\n') : '- No strong disliked patterns yet.'}\n\n## Current Profile Strength\n\n- Written samples collected: ${sampleCount}\n- Overall strength: ${strengthLabel(sampleCount + Math.floor(profile.ratedCount / 4) + Math.floor(profile.answeredCount / 5))}\n- Next recommended category: ${recommendedCategory(state) ?? 'none'}\n\n## Channel Coverage\n\n${channels.map((item) => `- ${item.channel}: ${item.count} sample${item.count === 1 ? '' : 's'} (${strengthLabel(item.count)})`).join('\n')}\n\n## Category Coverage\n\n${categories.map((item) => `- ${item.category}: ${item.count} sample${item.count === 1 ? '' : 's'}`).join('\n')}\n\n## Phrases I Avoid\n\n${avoided}\n\n## Rated Example Responses\n\n### Sounds Like Me\n\n${likedRatings}\n\n### Does Not Sound Like Me\n\n${dislikedRatings}\n\n## Written Examples\n\n${topExamples.length ? topExamples.map(sampleBlock).join('\n') : 'No written examples collected yet.'}\n\n## How to Use This File\n\nWhen generating a draft for me, first infer the relevant channel and situation. Then use the examples above to match my natural wording. If a draft sounds like a press release, generic email template, or polished AI response, rewrite it to be more like the examples. If the situation is underspecified, make reasonable assumptions and include the specific details a real message would need.\n`;
 }
 
 export function buildVoiceJson(state: AppState) {
+  const calibrationProfile = buildCalibrationProfile(state);
   return JSON.stringify(
     {
       app: 'TalkLikeMe',
-      schemaVersion: 2,
+      schemaVersion: 3,
       generatedAt: new Date().toISOString(),
       sampleCount: state.samples.length,
       negativeCount: state.negatives.length,
-      strength: strengthLabel(state.samples.length),
+      calibrationAnswerCount: state.calibrationAnswers?.length ?? 0,
+      responseRatingCount: state.responseRatings?.length ?? 0,
+      strength: strengthLabel(state.samples.length + Math.floor((state.responseRatings?.length ?? 0) / 4) + Math.floor((state.calibrationAnswers?.length ?? 0) / 5)),
       nextRecommendedCategory: recommendedCategory(state),
+      calibrationProfile,
       channels: channelCounts(state),
       categories: categoryCounts(state),
+      calibrationAnswers: state.calibrationAnswers ?? [],
+      responseRatings: state.responseRatings ?? [],
       samples: state.samples,
       negatives: state.negatives,
     },
@@ -56,7 +70,7 @@ export function buildJsonl(rows: unknown[]) {
 }
 
 export function buildSynthesisPrompt(state: AppState) {
-  return `You are helping me create a personal AI writing instruction file called voice.md.\n\nGoal: infer my natural writing voice from examples where I responded to realistic writing scenarios or rewrote generic/AI-ish drafts into my own words.\n\nPlease produce a practical instruction file that another AI assistant can use to write like me. Include:\n\n1. Quick rules for writing as me\n2. Tone and pacing\n3. Email-specific guidance\n4. Casual/professional differences if supported by evidence\n5. Phrases and patterns to avoid\n6. Before/after or scenario/response examples\n7. Guidance on when to add concrete details like meeting times, benefits, options, deadlines, names, or next steps\n8. A final copy-paste instruction block for future AI writing tasks\n\nImportant:\n- Do not invent style traits that are not supported by the examples.\n- Prefer concrete rules over vague adjectives.\n- Preserve the raw examples as evidence.\n- Treat invented scenario details in the responses as useful signal: they show how I make vague situations specific.\n- Make the file useful as an instruction document, not a personality essay.\n\nNegative examples / phrases I rejected:\n${buildJsonl(state.negatives)}\n\nWriting examples:\n${buildJsonl(state.samples)}\n`;
+  return `You are helping me create a personal AI writing instruction file called voice.md.\n\nGoal: infer my natural writing voice from three kinds of signal:\n\n1. Multiple-choice calibration answers\n2. 1–5 ratings of example responses\n3. Written examples where I responded to realistic writing scenarios or rewrote generic/AI-ish drafts into my own words\n\nPlease produce a practical instruction file that another AI assistant can use to write like me. Include:\n\n1. Quick rules for writing as me\n2. Tone and pacing\n3. Email-specific guidance\n4. Casual/professional differences if supported by evidence\n5. Phrases and patterns to avoid\n6. Before/after or scenario/response examples\n7. Guidance on when to add concrete details like meeting times, benefits, options, deadlines, names, or next steps\n8. A final copy-paste instruction block for future AI writing tasks\n\nImportant:\n- Do not invent style traits that are not supported by the quiz, ratings, or examples.\n- Treat 4–5 star rated responses as positive style evidence.\n- Treat 1–2 star rated responses as avoid-pattern evidence.\n- Prefer concrete rules over vague adjectives.\n- Preserve the raw examples as evidence.\n- Treat invented scenario details in the responses as useful signal: they show how I make vague situations specific.\n- Make the file useful as an instruction document, not a personality essay.\n\nCalibration profile:\n${JSON.stringify(buildCalibrationProfile(state), null, 2)}\n\nCalibration answers:\n${buildJsonl(state.calibrationAnswers ?? [])}\n\nRated responses:\n${buildJsonl(state.responseRatings ?? [])}\n\nNegative examples / phrases I rejected:\n${buildJsonl(state.negatives)}\n\nWriting examples:\n${buildJsonl(state.samples)}\n`;
 }
 
 export function downloadFile(filename: string, content: string, type = 'text/plain;charset=utf-8') {

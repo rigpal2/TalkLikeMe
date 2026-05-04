@@ -4,6 +4,8 @@ import type { AppState } from '../types';
 
 const state: AppState = {
   skippedPromptIds: [],
+  calibrationAnswers: [],
+  responseRatings: [],
   negatives: [
     {
       id: 'neg-1',
@@ -52,9 +54,11 @@ describe('exports', () => {
   it('builds non-empty structured voice json', () => {
     const json = buildVoiceJson(state);
     const parsed = JSON.parse(json);
-    expect(parsed.schemaVersion).toBe(2);
+    expect(parsed.schemaVersion).toBe(3);
     expect(parsed.sampleCount).toBe(1);
     expect(parsed.samples[0].contextFacts).toHaveLength(1);
+    expect(parsed.calibrationAnswers).toEqual([]);
+    expect(parsed.responseRatings).toEqual([]);
   });
 
   it('builds a copy-paste synthesis prompt', () => {

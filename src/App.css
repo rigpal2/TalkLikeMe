@@ -31,6 +31,7 @@ button {
 button:disabled { opacity: 0.45; cursor: not-allowed; }
 button.secondary { background: #2b2b2b; color: #f6f3ed; }
 button.ghost { background: transparent; color: #cfc8bb; border: 1px solid rgba(246, 243, 237, 0.16); }
+button.active { background: #9c8cff; color: #090909; }
 button.full { width: 100%; margin-top: 0.75rem; }
 button.danger { color: #ffb4a8; }
 
@@ -104,7 +105,10 @@ h2 { margin: 0; letter-spacing: -0.035em; }
 }
 
 .panel { padding: 22px; position: sticky; top: 20px; }
+.mode-tabs { display: grid; gap: 0.55rem; margin-bottom: 1rem; }
+.mode-tabs button { width: 100%; }
 .prompt-card { padding: clamp(24px, 5vw, 52px); min-height: 610px; }
+.calibration-card { min-height: 610px; }
 .prompt-meta { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 2rem; }
 .prompt-card h2 { font-size: clamp(1.8rem, 4vw, 3.3rem); margin-bottom: 1rem; }
 .setup {
@@ -174,6 +178,37 @@ textarea {
   line-height: 1.5;
 }
 textarea:focus { border-color: #9c8cff; box-shadow: 0 0 0 4px rgba(156, 140, 255, 0.14); }
+.option-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.85rem; margin-top: 1.25rem; }
+.option-card {
+  display: grid;
+  gap: 0.45rem;
+  text-align: left;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.055);
+  color: #f6f3ed;
+  border: 1px solid rgba(246, 243, 237, 0.12);
+  padding: 1rem;
+}
+.option-card:hover, .rating-card:hover { border-color: rgba(156, 140, 255, 0.5); }
+.option-card span { color: #cfc8bb; font-weight: 500; line-height: 1.35; }
+.completion-box {
+  background: rgba(255,255,255,0.045);
+  border: 1px solid rgba(246, 243, 237, 0.1);
+  border-radius: 20px;
+  padding: 1rem;
+  color: #d7d0c3;
+}
+.rating-list { display: grid; gap: 0.9rem; margin-top: 1.2rem; }
+.rating-card {
+  border: 1px solid rgba(246, 243, 237, 0.11);
+  background: rgba(255,255,255,0.045);
+  border-radius: 20px;
+  padding: 1rem;
+}
+.rating-card p { margin: 0 0 0.9rem; color: #f6f3ed; line-height: 1.45; }
+.rating-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.rating-buttons button { width: 42px; height: 42px; padding: 0; }
+button.selected-rating { background: #ffa64d; color: #090909; }
 .actions, .export-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem; }
 .coverage-list { display: grid; gap: 0.45rem; margin: 1rem 0 1.25rem; }
 .coverage-row { display: flex; justify-content: space-between; gap: 1rem; color: #cfc8bb; font-size: 0.95rem; }
@@ -201,7 +236,7 @@ textarea:focus { border-color: #9c8cff; box-shadow: 0 0 0 4px rgba(156, 140, 255
 
 @media (max-width: 860px) {
   .hero, .workspace, .export-grid { grid-template-columns: 1fr; display: grid; }
-  .scenario-grid { grid-template-columns: 1fr; }
+  .scenario-grid, .option-grid { grid-template-columns: 1fr; }
   .hero { align-items: start; }
   .stats { justify-content: flex-start; }
   .panel { position: static; }
